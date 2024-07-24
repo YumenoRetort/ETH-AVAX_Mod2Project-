@@ -175,12 +175,42 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>Welcome to the Metacrafters ATM!</h1>
+        <h1>Welcome to the Metacrafters Wallet/Warehouse!</h1>
       </header>
       {initUser()}
       <style jsx>{`
         .container {
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
           text-align: center;
+          background-color: #e0f2f1; /* Soft blue background */
+          color: #37474f; /* Dark text color */
+          font-family: Arial, sans-serif;
+        }
+        header {
+          margin-bottom: 2rem;
+        }
+        input {
+          margin: 0.5rem;
+          padding: 0.5rem;
+          font-size: 1rem;
+        }
+        button {
+          margin: 0.5rem;
+          padding: 0.5rem 1rem;
+          font-size: 1rem;
+          background-color: #80cbc4; /* Lighter shade of blue for buttons */
+          border: none;
+          color: white;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: background-color 0.3s ease;
+        }
+        button:hover {
+          background-color: #4db6ac; /* Darker shade of blue on hover */
         }
       `}</style>
     </main>
