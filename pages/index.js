@@ -7,6 +7,8 @@ export default function HomePage() {
   const [account, setAccount] = useState(undefined);
   const [atm, setATM] = useState(undefined);
   const [balance, setBalance] = useState(undefined);
+  const [amount, setAmount] = useState("");
+  const [transactionHistory, setTransactionHistory] = useState([]);
   const [itemName, setItemName] = useState("");
   const [itemQuantity, setItemQuantity] = useState(0);
   const [newOwner, setNewOwner] = useState("");
@@ -43,7 +45,6 @@ export default function HomePage() {
     const accounts = await ethWallet.request({ method: "eth_requestAccounts" });
     handleAccount(accounts);
 
-    // once wallet is set we can get a reference to our deployed contract
     getATMContract();
   };
 
@@ -57,23 +58,38 @@ export default function HomePage() {
 
   const getBalance = async () => {
     if (atm) {
-      setBalance((await atm.getBalance()).toNumber());
+      const balance = await atm.getBalance();
+      setBalance(balance);
     }
   };
 
   const deposit = async () => {
-    if (atm) {
-      let tx = await atm.deposit(1);
-      await tx.wait();
-      getBalance();
+    if (atm && amount !== "") {
+      try {
+        let tx = await atm.deposit(ethers.utils.parseEther(amount));
+        await tx.wait();
+        setAmount("");
+        getBalance();
+        updateTransactionHistory(`Deposited ${amount} ETH`);
+      } catch (error) {
+        console.error("Deposit error:", error.message);
+        alert(error.message);
+      }
     }
   };
 
   const withdraw = async () => {
-    if (atm) {
-      let tx = await atm.withdraw(1);
-      await tx.wait();
-      getBalance();
+    if (atm && amount !== "") {
+      try {
+        let tx = await atm.withdraw(ethers.utils.parseEther(amount));
+        await tx.wait();
+        setAmount("");
+        getBalance();
+        updateTransactionHistory(`Withdrawn ${amount} ETH`);
+      } catch (error) {
+        console.error("Withdraw error:", error.message);
+        alert(error.message);
+      }
     }
   };
 
@@ -95,33 +111,48 @@ export default function HomePage() {
 
   const transferOwnership = async () => {
     if (atm) {
-      let tx = await atm.transferOwnership(newOwner);
-      await tx.wait();
-      alert(`Transferred ownership to ${newOwner}`);
+      try {
+        let tx = await atm.transferOwnership(newOwner);
+        await tx.wait();
+        alert(`Transferred ownership to ${newOwner}`);
+        setAccount(newOwner);
+        setNewOwner("");
+      } catch (error) {
+        console.error("Transfer ownership error:", error.message);
+        alert(error.message);
+      }
     }
   };
 
+  const updateTransactionHistory = (transaction) => {
+    setTransactionHistory([...transactionHistory, transaction]);
+  };
+
   const initUser = () => {
-    // Check to see if user has Metamask
     if (!ethWallet) {
       return <p>Please install Metamask in order to use this ATM.</p>;
     }
 
-    // Check to see if user is connected. If not, connect to their account
     if (!account) {
       return <button onClick={connectAccount}>Please connect your Metamask wallet</button>;
     }
 
-    if (balance == undefined) {
+    if (balance === undefined) {
       getBalance();
     }
 
     return (
       <div>
-        <p>Your Account: {account}</p>
-        <p>Your Balance: {balance}</p>
-        <button onClick={deposit}>Deposit 1 ETH</button>
-        <button onClick={withdraw}>Withdraw 1 ETH</button>
+        <p>Your Account: {newOwner ? newOwner : account}</p>
+        <p>Your Balance: {balance ? ethers.utils.formatEther(balance) : "Loading..."} ETH</p>
+        <input
+          type="text"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          placeholder="Amount"
+        />
+        <button onClick={deposit}>Deposit</button>
+        <button onClick={withdraw}>Withdraw</button>
         <div>
           <h2>Add Item</h2>
           <input
@@ -134,7 +165,7 @@ export default function HomePage() {
             type="number"
             placeholder="Item Quantity"
             value={itemQuantity}
-            onChange={(e) => setItemQuantity(e.target.value)}
+            onChange={(e) => setItemQuantity(parseInt(e.target.value))}
           />
           <button onClick={addItem}>Add Item</button>
         </div>
@@ -150,7 +181,7 @@ export default function HomePage() {
             type="number"
             placeholder="Item Quantity"
             value={itemQuantity}
-            onChange={(e) => setItemQuantity(e.target.value)}
+            onChange={(e) => setItemQuantity(parseInt(e.target.value))}
           />
           <button onClick={redeemItem}>Redeem Item</button>
         </div>
@@ -164,6 +195,14 @@ export default function HomePage() {
           />
           <button onClick={transferOwnership}>Transfer Ownership</button>
         </div>
+        <div>
+          <h2>Transaction History</h2>
+          <ul>
+            {transactionHistory.map((transaction, index) => (
+              <li key={index}>{transaction}</li>
+            ))}
+          </ul>
+        </div>
       </div>
     );
   };
@@ -175,7 +214,7 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>Welcome to the Metacrafters Wallet/Warehouse!</h1>
+        <h1>Welcome to the Metacrafters ATM/Wallet!</h1>
       </header>
       {initUser()}
       <style jsx>{`
@@ -186,8 +225,8 @@ export default function HomePage() {
           justify-content: center;
           align-items: center;
           text-align: center;
-          background-color: #e0f2f1; /* Soft blue background */
-          color: #37474f; /* Dark text color */
+          background-color: #e0f2f1;
+          color: #37474f;
           font-family: Arial, sans-serif;
         }
         header {
@@ -202,7 +241,7 @@ export default function HomePage() {
           margin: 0.5rem;
           padding: 0.5rem 1rem;
           font-size: 1rem;
-          background-color: #80cbc4; /* Lighter shade of blue for buttons */
+          background-color: #80cbc4;
           border: none;
           color: white;
           cursor: pointer;
@@ -210,7 +249,7 @@ export default function HomePage() {
           transition: background-color 0.3s ease;
         }
         button:hover {
-          background-color: #4db6ac; /* Darker shade of blue on hover */
+          background-color: #4db6ac;
         }
       `}</style>
     </main>
