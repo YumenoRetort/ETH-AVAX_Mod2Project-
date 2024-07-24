@@ -214,7 +214,7 @@ export default function HomePage() {
   return (
     <main className="container">
       <header>
-        <h1>Welcome to the Metacrafters ATM/Wallet!</h1>
+        <h1>Welcome to the Metacrafters Wallet/Warehouse!</h1>
       </header>
       {initUser()}
       <style jsx>{`
