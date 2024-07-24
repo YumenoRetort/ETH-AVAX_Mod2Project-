@@ -1,7 +1,9 @@
 # ETH-AVAX_Mod2Project-Smart Contract Management 
 
 ## Description
-This project was made in compliance with the requirements for my ETH+AVAX Metacrafters course by creating a smart contract project that has 2-3 functions and can connect to a frontend interface.
+This project was made in compliance with the requirements for my ETH+AVAX Metacrafters course by creating a smart contract project that has 2-3 functions and can connect to a frontend interface. 
+
+The program is a Wallet/Warehouse program that allows a user to Withdraw and Deposit cash, add and take items, and change ownership.
 
 
 ## How/where to download your program
