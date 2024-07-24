@@ -4,9 +4,13 @@ pragma solidity ^0.8.9;
 contract Assessment {
     address payable public owner;
     uint256 public balance;
+    mapping(string => uint256) public items;
+    uint256 public itemPrice = 0 ether; 
 
     event Deposit(uint256 amount);
     event Withdraw(uint256 amount);
+    event ItemAdded(string itemName, uint256 quantity);
+    event ItemRedeemed(string itemName, uint256 quantity);
     event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
 
     constructor(uint initBalance) payable {
@@ -14,15 +18,17 @@ contract Assessment {
         balance = initBalance;
     }
 
-    function getBalance() public view returns(uint256){
+    modifier onlyOwner() {
+        require(msg.sender == owner, "You are not the owner of this account");
+        _;
+    }
+
+    function getBalance() public view returns (uint256) {
         return balance;
     }
 
-    function deposit(uint256 _amount) public payable {
-        uint _previousBalance = balance;
-
-        // make sure this is the owner
-        require(msg.sender == owner, "You are not the owner of this account");
+    function deposit(uint256 _amount) public payable onlyOwner {
+        uint256 _previousBalance = balance;
 
         // perform transaction
         balance += _amount;
@@ -37,9 +43,8 @@ contract Assessment {
     // custom error
     error InsufficientBalance(uint256 balance, uint256 withdrawAmount);
 
-    function withdraw(uint256 _withdrawAmount) public {
-        require(msg.sender == owner, "You are not the owner of this account");
-        uint _previousBalance = balance;
+    function withdraw(uint256 _withdrawAmount) public onlyOwner {
+        uint256 _previousBalance = balance;
         if (balance < _withdrawAmount) {
             revert InsufficientBalance({
                 balance: balance,
@@ -57,22 +62,30 @@ contract Assessment {
         emit Withdraw(_withdrawAmount);
     }
 
-    function transferOwnership(address payable _newOwner) public {
+    function addItem(string memory _itemName, uint256 _quantity) public onlyOwner {
+        uint256 cost = itemPrice * _quantity;
+        require(balance >= cost, "Insufficient balance to add items");
 
-        require(msg.sender == owner, "You are not the owner of this account");
-
-        
-        require(_newOwner != address(0), "Invalid new owner address");
-
-       
-        address payable _previousOwner = owner;
-
-       
-        owner = _newOwner;
+        items[_itemName] += _quantity;
+        balance -= cost;
 
         // emit the event
-        emit OwnershipTransferred(_previousOwner, _newOwner);
-        }
-
-
+        emit ItemAdded(_itemName, _quantity);
     }
+
+    function redeemItem(string memory _itemName, uint256 _quantity) public {
+        require(items[_itemName] >= _quantity, "Not enough items in stock");
+
+        items[_itemName] -= _quantity;
+
+        // emit the event
+        emit ItemRedeemed(_itemName, _quantity);
+    }
+
+    function transferOwnership(address payable _newOwner) public onlyOwner {
+        require(_newOwner != address(0), "New owner address is zero address");
+        
+        emit OwnershipTransferred(owner, _newOwner);
+        owner = _newOwner;
+    }
+}
